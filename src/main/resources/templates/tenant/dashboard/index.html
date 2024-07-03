@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>仪表盘</title>
+  <link rel="icon" th:href="@{/images/favicon.ico}" type="image/ico">
+  <meta http-equiv="description" content="bluewind-shorturl在线短链生成" />
+  <meta http-equiv="keywords" content="蓝风软件,短链生成,在线短链生成,长链转短链" />
+  <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+  <link th:href="@{/css/materialdesignicons.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.min.css}" rel="stylesheet">
+
+</head>
+
+<body>
+<div class="container-fluid p-t-15">
+
+  <div class="row">
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-primary">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h6 text-white m-t-0">总链接数</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" th:text="${dashboardInfo.urlTotalNumber}">102,125.00</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-currency-cny fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-danger">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h6 text-white m-t-0">总访问量</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" th:text="${dashboardInfo.accessTotalNumber}">920,000</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-account fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-success">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h6 text-white m-t-0">今日访问量</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" th:text="${dashboardInfo.accessTodayNumber}">34,005,000</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-arrow-down-bold fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-purple">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h6 text-white m-t-0">今日独立IP数</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" th:text="${dashboardInfo.accessTodayIpNumber}">153</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-comment-outline fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row">
+
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h4>今日访问量Top25</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive" style="max-height: none;">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>短链</th>
+                  <th>创建时间</th>
+                  <th>原始链接</th>
+                  <th>访问量</th>
+                  <th>独立IP数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:if=${dashboardInfo.topList.size()==0}>
+                </tr>
+
+                <tr th:each="item, itemStat: ${dashboardInfo.topList}">
+                  <td th:text="${itemStat.count}"></td>
+                  <td th:text="${item.surl}"></td>
+                  <td th:text="${item.created_at}"></td>
+                  <td th:text="${item.lurl}"></td>
+                  <td><span class="label label-info" th:text="${item.accessCount}"></span></td>
+                  <td><span class="label label-warning" th:text="${item.ipCount}"></span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+</body>
+</html>

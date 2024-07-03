@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>租户注册</title>
+    <link rel="icon" th:href="@{/images/favicon.ico}" type="image/ico">
+    <meta http-equiv="description" content="bluewind-shorturl在线短链生成"/>
+    <meta http-equiv="keywords" content="蓝风软件,短链生成,在线短链生成,长链转短链"/>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/materialdesignicons.min.css}" rel="stylesheet">
+    <link th:href="@{/css/style.min.css}" rel="stylesheet">
+    <link th:href="@{/js/bootstrap-validator/css/bootstrapValidator.css}" rel="stylesheet">
+    <style th:inline="text">
+        .lyear-wrapper {
+            position: relative;
+            background-image: url("[[@{/}]]images/login-bg.jpg");
+            background-size: cover;
+        }
+        .lyear-login {
+            display: flex !important;
+            min-height: 100vh;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .lyear-login:after{
+            content: '';
+            min-height: inherit;
+            font-size: 0;
+        }
+        .login-center {
+            width: 500px;
+            background: #fff;
+            min-width: 29.25rem;
+            padding: 2.14286em 0;
+            border-radius: 3px;
+            margin: 2.85714em;
+        }
+        .login-header {
+            margin-bottom: 1.5rem !important;
+        }
+        /* 必填红点 */
+        .is-required::before {
+            content: "*";
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+<div class="row lyear-wrapper">
+    <div class="lyear-login">
+        <div class="login-center">
+            <div class="login-header text-center">
+                <h1>创建用户账号</h1>
+            </div>
+            <form id="loginForm" class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-md-4 control-label is-required">用户账号：</label>
+                    <div class="col-md-7">
+                        <input type="text" placeholder="请输入英文字母或英文+数字" class="form-control" name="tenant_account" id="tenant_account" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-md-4 control-label is-required">用户名称：</label>
+                    <div class="col-md-7">
+                        <input type="text" placeholder="请输入用户名称" class="form-control" name="tenant_name" id="tenant_name" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-md-4 control-label is-required">密码：</label>
+                    <div class="col-md-7">
+                        <input type="password" placeholder="请输入密码" class="form-control" id="tenant_password" name="tenant_password" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-md-4 control-label is-required">确认密码：</label>
+                    <div class="col-md-7">
+                        <input type="password" placeholder="请输入密码" class="form-control" id="tenant_password2" name="tenant_password2" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-md-4 control-label is-required">邮箱：</label>
+                    <div class="col-md-5">
+                        <input type="text" placeholder="请输入邮箱账号" class="form-control" id="tenant_email" name="tenant_email" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary" type="button" id="sendEmail">发送</button>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-md-4 control-label is-required">验证码：</label>
+                    <div class="col-md-7">
+                        <input type="text" name="email_code" class="form-control" placeholder="请输入验证码">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10 col-md-offset-1">
+                        <button class="btn btn-block btn-primary" type="button" id="submitForm" data-loading-text="注册中....">立即提交</button>
+                    </div>
+                </div>
+            </form>
+            <hr>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+<script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{/js/bootstrap-validator/js/bootstrapValidator.js}"></script>
+<script type="text/javascript" th:src="@{/js/md5.js}"></script>
+<script type="text/javascript" th:src="@{/js/coco-message/coco-message.js}"></script>
+<script type="text/javascript" th:src="@{/js/public.js}"></script>
+
+<script type="text/javascript" th:inline="javascript">
+    AjaxUtil.ctx = /*[[@{/}]]*/'';
+
+    var verifyKey;
+    $(document).ready(function () {
+
+        $('#loginForm').bootstrapValidator({
+            fields: {
+                tenant_account: {validators: {notEmpty: {message: '用户账号不能为空'}}},
+                tenant_name: {validators: {notEmpty: {message: '用户名称不能为空'}}},
+                tenant_password: {validators: {notEmpty: {message: '密码不能为空'}}},
+                tenant_password2: {validators: {notEmpty: {message: '确认密码不能为空'}}},
+                tenant_email: {validators: {notEmpty: {message: '邮箱不能为空'}}},
+                email_code: {validators: {notEmpty: {message: '邮箱验证码不能为空'}}}
+            }
+        });
+
+
+        // 发送邮箱验证码按钮
+        $("#sendEmail").click(function () {
+            var self = $(this);
+            // 按钮不可点击态，直接返回
+            if (self.hasClass('disabled')) {
+                return false;
+            }
+
+            var tenant_email = $("input[name='tenant_email']").val();
+            if (!checkEMail(tenant_email)) {
+                Message.error("请输入正确的邮箱账号", 1000);
+                return false;
+            } else {
+                let formdata = {
+                    "tenant_email": tenant_email,
+                }
+                AjaxUtil.post({
+                    url: AjaxUtil.ctx + "tenant/sendEmail",
+                    data: formdata,
+                    success: function (res) {
+                        if (res.code === 200) {
+                            Message.success(1000, res.msg, function () {
+                                verifyKey = res.data.verifyKey;
+                                // 设置按钮为禁用状态，立即变灰
+                                self.addClass("disabled");
+                                var count = 60;
+                                var countdown = setInterval(function () {
+                                    self.html(count + "秒");
+                                    if (count == 0) {
+                                        self.html("发送").removeClass("disabled");
+                                        clearInterval(countdown);
+                                    }
+                                    count--;
+                                }, 1000); // 每秒执行一次
+                            });
+                        } else {
+                            Message.error(res.msg, 1000);
+                        }
+                    },
+                    error: function (error) {
+                        Message.error(error, 1000);
+                    }
+                });
+            }
+        });
+
+
+        // 立即提交按钮
+        $("#submitForm").click(function () {
+            var bv = $('#loginForm').data('bootstrapValidator');
+            bv.validate();
+            if (bv.isValid()) {
+                // 不直接走form.submit()，登录走ajax比较合
+                let tenantAccount = $("input[name='tenant_account']").val();
+                let tenantName = $("input[name='tenant_name']").val();
+                let tenantPassword = $("input[name='tenant_password']").val();
+                let tenantPassword2 = $("input[name='tenant_password2']").val();
+                let tenantEmail = $("input[name='tenant_email']").val();
+                let emailCode = $("input[name='email_code']").val();
+
+                // 判断两次密码一样不
+                if (tenantPassword !== tenantPassword2) {
+                    Message.error("两次密码请输入一致", 1000);
+                    return false;
+                }
+
+                // Thymeleaf在js中直接获取model中的值
+                let secret = '[[${secret}]]';
+                let formdata = {
+                    "tenantAccount": tenantAccount,
+                    "tenantName": tenantName,
+                    "tenantPassword": md5(secret + tenantPassword),
+                    "tenantEmail": tenantEmail,
+                    "emailCode": emailCode,
+                    "verifyKey": verifyKey
+                }
+                // 按钮加载
+                $("#submitForm").button('loading').queue();
+
+                AjaxUtil.post({
+                    url: AjaxUtil.ctx + "tenant/doRegister",
+                    data: formdata,
+                    success: function (res) {
+                        if (res.code === 200) {
+                            Message.success(1000, res.msg, function () {
+                                // 跳转租户首页
+                                window.location.href = AjaxUtil.ctx + "tenant/index";
+                            });
+                        } else {
+                            $("#submitForm").button('reset');
+                            $("#submitForm").dequeue();
+                            Message.error(res.msg, 1000);
+                        }
+                    },
+                    error: function (error) {
+                        $("#submitForm").button('reset');
+                        $("#submitForm").dequeue();
+                        Message.error(error, 1000);
+                    }
+                });
+            }
+        });
+
+    });
+
+
+    /**
+     * 校验邮箱号码是否正确
+     * @param val
+     * @returns {boolean}
+     */
+    function checkEMail(val) {
+        // 正则表达式
+        var reg = new RegExp("^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$");
+        return reg.test(val);
+    }
+
+</script>
+</body>
+</html>

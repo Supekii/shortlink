@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>蓝风短链平台</title>
+    <meta http-equiv="description" content="蓝风短链平台提供专业的网址缩短服务，具有稳定、快速、安全的特点，帮您把冗长的URL地址缩短成6个字符以内的短网址，支持批量缩短，淘宝百度网址缩短、营销数据分析、开放API接口等服务"/>
+    <meta http-equiv="keywords" content="蓝风软件,短链生成,在线短链生成,长链转短链,短网址,短链接,短连接,网址缩短,短域名,短地址,缩短网址,url缩短,短网址生成,短网址在线生成,短网址生成器,短网址在线转换,短网址接口,免费短网址"/>
+    <link rel="icon" th:href="@{/images/favicon.ico}">
+    <link rel="bookmark" th:href="@{/images/favicon.ico}">
+    <link rel="stylesheet" href="https://lf3-cdn-tos.bytecdntp.com/cdn/element-ui/2.15.7/theme-chalk/index.min.css">
+
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/vue/2.6.12/vue.min.js" type="application/javascript"></script>
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/element-ui/2.15.7/index.min.js"></script>
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/axios/0.26.0/axios.min.js"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/qs/6.10.3/qs.min.js" type="application/javascript"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/clipboard.js/2.0.8/clipboard.min.js" type="application/javascript"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/qrcodejs/1.0.0/qrcode.min.js" type="application/javascript"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+        }
+        a {
+            color: #606288;
+        }
+    </style>
+</head>
+<body>
+<div id="app" style="height: 100%;">
+    <el-container style="height: 100%;">
+        <el-header style="padding: 0;">
+            <el-row style="background-color:#00162A; height: 60px">
+                <el-col :span="8">
+                    <span style="color: white;font-size: 30px;font-weight: bold;line-height: 60px;margin-left: 20px;cursor: pointer"
+                          @click="freshWeb">
+                        <i class="el-icon-share"></i>&nbsp;蓝风短链平台
+                    </span>
+                </el-col>
+                <el-col :span="14">
+                    <el-menu :default-active="activeIndex" mode="horizontal" @select="handleSelect"
+                             background-color="#00162A" text-color="#fff" active-text-color="#ffd04b">
+                        <el-menu-item index="index">
+                            <span style="font-weight: bold">首页</span>
+                        </el-menu-item>
+                        <el-menu-item index="apidoc">
+                            <span style="font-weight: bold">API文档</span>
+                        </el-menu-item>
+                        <el-menu-item index="about">
+                            <span style="font-weight: bold">关于我们</span>
+                        </el-menu-item>
+                    </el-menu>
+                </el-col>
+
+                <el-col :span="2" style="padding-top: 12px">
+                    <el-button size="medium" round @click="login()">注册/登录</el-button>
+                </el-col>
+            </el-row>
+        </el-header>
+        <el-main style="background-color: #FFF;height: 600px;">
+            <el-row>
+                <el-col :span="24" align="middle">
+                        <span style="color: #00162A;font-size: 30px;font-weight: bold;line-height: 60px;cursor: pointer">
+                            专业的短链和数据分析平台
+                        </span>
+                </el-col>
+            </el-row>
+
+            <div style="width: 50%;margin-left: 25%;margin-top: 20px;">
+                <el-card class="box-card">
+                    <el-row :gutter="10">
+                        <el-col :span="16">
+                            <el-input size="medium" v-model="originalUrl" placeholder="请输入您的链接，如：http://www.thymeleaf.org">
+                            </el-input>
+                        </el-col>
+                        <el-col :span="4">
+                            <el-select size="medium" v-model="validityPeriod" placeholder="有效期">
+                                <el-option label="七天" value="sevenday"></el-option>
+                                <el-option label="3个月" value="threemonth"></el-option>
+                                <el-option label="半年" value="halfyear"></el-option>
+                                <el-option label="永久" value="forever"></el-option>
+                            </el-select>
+                        </el-col>
+
+                        <el-col :span="3">
+                            <el-button size="medium" type="primary" @click="generateShortURL()" :loading="generating">{{generateButtonText}}</el-button>
+                        </el-col>
+                    </el-row>
+
+                </el-card>
+                <el-card class="box-card" style="margin-top:10px" v-show="ifShowResult">
+                    <el-row :gutter="10" type="flex" align="middle">
+                        <el-col :span="4">
+                            <div ref="qrCodeDiv" style="width: 100px; height: 100px;"> </div>
+                        </el-col>
+                        <el-col :span="20">
+                            <el-row type="flex" align="middle">
+                                <span>
+                                    短链接：<a :href="shortUrl" target="_blank">{{shortUrl}}</a>
+                                </span>
+                                &nbsp;&nbsp;
+                                <el-tooltip class="item" effect="light" content="点击复制短链" placement="top-start">
+                                    <i class="el-icon-document-copy" @click="copy($event)" style="cursor: pointer"></i>
+                                </el-tooltip>
+                            </el-row>
+                            <el-row type="flex" align="middle" style="margin-top: 10px">
+                                <span style="color: #C5C7CE">
+                                    原始链接：<a :href="originalUrl" target="_blank" style="color: #C5C7CE">{{originalUrl}}</a>
+                                </span>
+                            </el-row>
+                            <el-row type="flex" align="middle" style="margin-top: 10px">
+                                <span style="font-size: 14px;">
+                                    当前您尚未登录，生成的短链接无法保存和查看专业统计分析数据，请您 <a th:href="@{/tenant/login}">登录</a> 后使用完整功能！
+                                </span>
+                            </el-row>
+                        </el-col>
+                    </el-row>
+                </el-card>
+            </div>
+        </el-main>
+
+        <el-footer style="background-color: #FFF">
+            <el-row>
+                <el-col :span="24" align="middle">
+                    <span style="color: #606288;font-size: 12px;">
+                        免责声明：短链接由用户生成，所跳转的内容与本站无关。本站禁止违法违规内容的网站生成短链接，如有发现立刻封停！
+                    </span>
+                    <br/>
+                    <span style="color: #606288;font-size: 12px;">
+                        ICP备案：<a href="http://beian.miit.gov.cn" target="_blank">鲁ICP备xxxxxxx号-1</a> | 联系我们：xxxx@163.com | <a href="https://www.baidu.com/" target="_blank">资讯中心</a> | <a href="https://www.baidu.com/" target="_blank">关于我们</a>
+                    </span>
+                </el-col>
+            </el-row>
+        </el-footer>
+    </el-container>
+</div>
+
+<script>
+    var ctx = /*[[@{/}]]*/'';
+
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                message: 'Hello Vue.js!',
+                originalUrl: '',
+                validityPeriod: '',
+                shortUrl: '',
+                qrcode: '',
+                ifShowResult: false,
+                activeIndex: 'index',
+                generateButtonText: '生成短链接',
+                generating: false
+            }
+        },
+        methods: {
+            freshWeb() {
+                window.location.reload();
+            },
+            login() {
+                // 跳转租户登录页
+                window.location.href = ctx + "tenant/login";
+            },
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+                if (key === 'index') {
+                    window.location.href = ctx + '';
+                } else if (key === 'apidoc') {
+                    window.location.href = ctx + 'apiDoc';
+                } else if (key === 'about') {
+                    window.location.href = ctx + 'about';
+                }
+            },
+            copy: function(event) {
+                this.handleClipboard(this.shortUrl, event);
+            },
+            generateShortURL: function() {
+                if (this.originalUrl) {
+                    if(!this.originalUrl.startsWith("http://") && !this.originalUrl.startsWith("https://")){
+                        this.$message.error('请输入正确的网址链接，注意以http://或https://开头');
+                        return;
+                    }
+                    // 改变按钮为loading状态
+                    this.generateButtonText = '正在生成';
+                    this.generating = true;
+                    axios({
+                        method: 'post',
+                        url: ctx + "generate",
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        data: Qs.stringify({
+                            originalUrl: this.originalUrl,
+                            validityPeriod: this.validityPeriod,
+                            tenantId: 'common'
+                        })
+                    }).then((res) => {
+                        if (res.data.code == 200) {
+                            this.shortUrl = res.data.data;
+                            this.ifShowResult = true;
+                            this.createQrcode(this.shortUrl);
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                        // 恢复按钮为正常状态
+                        this.generateButtonText = '生成短链接';
+                        this.generating = false;
+                    }).catch((res) => {
+                        console.log(res);
+                        // 恢复按钮为正常状态
+                        this.generateButtonText = '生成短链接';
+                        this.generating = false;
+                    })
+                } else {
+                    this.$message.error('请输入要转换的链接');
+                }
+            },
+            createQrcode(content) {
+                if (this.qrCode) {
+                    this.qrCode.clear(); // 清除代码
+                    this.qrCode.makeCode(content); // 生成另外一个二维码
+                } else {
+                    this.qrCode = new QRCode(this.$refs.qrCodeDiv, {
+                        text: content, //text必须是字符串
+                        width: 100,
+                        height: 100,
+                        colorDark: "#333333", //二维码颜色
+                        colorLight: "#ffffff", //二维码背景色
+                        correctLevel: QRCode.CorrectLevel.L //容错率，L/M/H
+                    });
+                }
+            },
+            handleClipboard(text, event) {
+                const clipboard = new ClipboardJS(event.target, {
+                    text: () => text
+                });
+                clipboard.on('success', () => {
+                    this.clipboardSuccess(text);
+                    clipboard.destroy();
+                });
+                clipboard.on('error', () => {
+                    this.clipboardError();
+                    clipboard.destroy();
+                });
+                clipboard.onClick(event);
+            },
+            clipboardSuccess(text) {
+                this.$message({
+                    message: '已复制到粘贴板',
+                    type: 'success'
+                });
+            },
+            clipboardError() {
+                this.$message.error('Copy error');
+            }
+        }
+    });
+</script>
+</body>
+</html>
